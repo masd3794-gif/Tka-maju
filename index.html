@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TKAMAJU — Latihan Soal TKA</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<div class="app" id="app">
+
+  <!-- ===================== AUTH SCREEN ===================== -->
+  <section class="screen active" id="screen-auth">
+    <div class="auth-hero">
+      <div class="mascot">
+        <svg width="42" height="42" viewBox="0 0 24 24" fill="none"><path d="M12 3L2 8l10 5 10-5-10-5z" fill="#fff"/><path d="M6 12v5c0 1.5 2.7 3 6 3s6-1.5 6-3v-5" stroke="#fff" stroke-width="1.6" stroke-linecap="round"/></svg>
+      </div>
+      <h1>TKA<span style="color:#FF9F5A">MAJU</span></h1>
+      <p>Latihan soal TKA jadi seru — pilih mode, kumpulkan poin, naik rank!</p>
+    </div>
+
+    <div class="conn-warn" id="conn-warn">⚠️ Tidak bisa terhubung ke server Python (app.py). Jalankan <code>python app.py</code> lalu buka halaman ini lewat http://localhost:5000</div>
+
+    <div class="tabs">
+      <button class="tab active" id="tab-login" onclick="switchAuthTab('login')">Masuk</button>
+      <button class="tab" id="tab-register" onclick="switchAuthTab('register')">Daftar Akun</button>
+    </div>
+
+    <form class="auth-form active card" id="form-login" onsubmit="return doLogin(event)">
+      <label class="label">Nama Pengguna</label>
+      <input class="input" id="login-username" placeholder="cth: rafi_pintar" autocomplete="username" required>
+      <label class="label">Kata Sandi</label>
+      <input class="input" id="login-password" type="password" placeholder="••••••••" autocomplete="current-password" required>
+      <div class="error-msg" id="login-error"></div>
+      <button class="btn btn-primary btn-block" type="submit">Masuk ke Akun</button>
+    </form>
+
+    <form class="auth-form card" id="form-register" onsubmit="return doRegister(event)">
+      <label class="label">Nama Lengkap</label>
+      <input class="input" id="reg-name" placeholder="cth: Rafi Ahmad" required>
+      <label class="label">Nama Pengguna</label>
+      <input class="input" id="reg-username" placeholder="tanpa spasi, unik" required>
+      <label class="label">Kata Sandi</label>
+      <input class="input" id="reg-password" type="password" placeholder="min. 4 karakter" required>
+      <label class="label">Jenjang Sekolah</label>
+      <select class="input" id="reg-jenjang">
+        <option value="sd">SD / MI (Sederajat)</option>
+        <option value="smp">SMP / MTs (Sederajat)</option>
+        <option value="sma">SMA / SMK (Sederajat)</option>
+      </select>
+      <div class="error-msg" id="reg-error"></div>
+      <button class="btn btn-primary btn-block" type="submit">Buat Akun Baru</button>
+    </form>
+  </section>
+
+  <!-- ===================== HOME SCREEN ===================== -->
+  <section class="screen" id="screen-home">
+    <div class="topbar">
+      <div class="brand">
+        <div class="brand-mark">TM</div>
+        <div class="brand-name">TKA<span>MAJU</span></div>
+      </div>
+      <div class="userchip" onclick="goScreen('profile')">
+        <div class="av" id="home-av">R</div>
+        <div class="pt mono" id="home-points">0 pt</div>
+      </div>
+    </div>
+
+    <div class="rank-banner" id="rank-banner-home" onclick="goScreen('profile')">
+      <div class="rank-row">
+        <div class="rank-badge-icon" id="rank-icon-home"></div>
+        <div class="rank-info">
+          <div class="tier" id="rank-tier-home">Bronze 1</div>
+          <div class="pts" id="rank-pts-home">0 poin menuju tingkat berikutnya</div>
+        </div>
+      </div>
+      <div class="rank-bar-track"><div class="rank-bar-fill" id="rank-bar-home" style="width:0%"></div></div>
+    </div>
+
+    <div class="section-title">Pilih Jenjang <span class="sub">wajib sebelum memilih mapel</span></div>
+    <div class="jenjang-grid" id="jenjang-grid">
+      <button class="jenjang-card" data-j="sd" onclick="setJenjang('sd')"><div class="num">SD</div><div class="nm">MI Sederajat</div></button>
+      <button class="jenjang-card" data-j="smp" onclick="setJenjang('smp')"><div class="num">SMP</div><div class="nm">MTs Sederajat</div></button>
+      <button class="jenjang-card" data-j="sma" onclick="setJenjang('sma')"><div class="num">SMA</div><div class="nm">SMK Sederajat</div></button>
+    </div>
+
+    <div class="section-title">Mata Pelajaran</div>
+    <div class="subject-grid" id="subject-grid"></div>
+  </section>
+
+  <!-- ===================== MODE SCREEN ===================== -->
+  <section class="screen" id="screen-mode">
+    <div class="backrow">
+      <button class="backbtn" onclick="goScreen('home')">←</button>
+      <div>
+        <div class="crumb-title" id="mode-subject-title">Matematika</div>
+        <div class="crumb-sub" id="mode-subject-sub">SD/MI — pilih tingkat kesulitan</div>
+      </div>
+    </div>
+    <div class="mode-list">
+      <button class="mode-card" onclick="setMode('mudah')">
+        <div class="l"><div class="mode-dot" style="background:#1BA672"></div><div><div class="mode-name">Mode Mudah</div><div class="mode-desc">Baru mulai belajar, santai dulu</div></div></div>
+        <div class="mode-arrow">›</div>
+      </button>
+      <button class="mode-card" onclick="setMode('sedang')">
+        <div class="l"><div class="mode-dot" style="background:#E38A2C"></div><div><div class="mode-name">Mode Sedang</div><div class="mode-desc">Mau lebih serius berlatih</div></div></div>
+        <div class="mode-arrow">›</div>
+      </button>
+      <button class="mode-card" onclick="setMode('susah')">
+        <div class="l"><div class="mode-dot" style="background:#E5484D"></div><div><div class="mode-name">Mode Susah</div><div class="mode-desc">Tantangan penuh, poin lebih besar</div></div></div>
+        <div class="mode-arrow">›</div>
+      </button>
+    </div>
+
+    <div class="section-title">Jenis Permainan</div>
+    <div class="playtype-grid">
+      <button class="playtype-card klasik" onclick="setPlaytype('klasik')" id="pt-klasik">
+        <div class="ic">📘</div><div class="nm">Klasik</div><div class="ds">Latihan santai, tanpa efek rank</div>
+      </button>
+      <button class="playtype-card rank" onclick="setPlaytype('rank')" id="pt-rank">
+        <div class="ic">🏆</div><div class="nm">Rank</div><div class="ds">Poin dihitung, rank bisa naik</div>
+      </button>
+    </div>
+    <button class="btn btn-primary btn-block" style="margin-top:20px" onclick="startQuiz()">Mulai Latihan</button>
+  </section>
+
+  <!-- ===================== QUIZ SCREEN ===================== -->
+  <section class="screen" id="screen-quiz">
+    <div class="quiz-top">
+      <button class="backbtn" onclick="confirmExitQuiz()">✕</button>
+      <div class="quiz-progress-track"><div class="quiz-progress-fill" id="quiz-progress"></div></div>
+      <div class="timer-chip" id="timer-chip">⏱ <span id="timer-text">00:30</span></div>
+    </div>
+    <div class="q-card">
+      <span class="q-tag" id="q-tag">Soal 1/8</span>
+      <div class="q-text" id="q-text">Pertanyaan akan tampil di sini.</div>
+      <div class="opt-list" id="opt-list"></div>
+      <div class="essay-box" id="essay-box" style="display:none">
+        <textarea id="essay-input" placeholder="Tulis jawabanmu di sini..."></textarea>
+      </div>
+    </div>
+    <div class="quiz-nav">
+      <button class="btn btn-ghost" id="btn-skip" onclick="nextQuestion(true)">Lewati</button>
+      <button class="btn btn-primary" id="btn-next" onclick="submitAnswer()">Jawab</button>
+    </div>
+  </section>
+
+  <!-- ===================== RESULT SCREEN ===================== -->
+  <section class="screen" id="screen-result">
+    <div class="result-hero">
+      <div class="crumb-title" style="font-size:20px">Hasil Latihanmu</div>
+      <div class="result-ring">
+        <svg width="150" height="150">
+          <circle cx="75" cy="75" r="64" stroke="#E4E9FA" stroke-width="12" fill="none"/>
+          <circle cx="75" cy="75" r="64" stroke="url(#gradResult)" stroke-width="12" fill="none" stroke-linecap="round" id="result-circle" stroke-dasharray="402" stroke-dashoffset="402"/>
+          <defs><linearGradient id="gradResult" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#4A3AFF"/><stop offset="100%" stop-color="#FF9F5A"/></linearGradient></defs>
+        </svg>
+        <div class="pct"><b id="result-pct">0%</b><span>BENAR</span></div>
+      </div>
+      <div class="stat-row">
+        <div class="stat-box"><b id="result-correct">0</b><span>Benar</span></div>
+        <div class="stat-box"><b id="result-wrong">0</b><span>Salah</span></div>
+        <div class="stat-box"><b id="result-time">0:00</b><span>Waktu</span></div>
+      </div>
+      <div class="point-pop">✨ +<span id="result-points">0</span> poin</div>
+      <div id="result-rankup" style="display:none; margin-top:12px; font-weight:800; color:var(--primary);">🎉 Naik tingkat!</div>
+    </div>
+    <button class="btn btn-primary btn-block" onclick="goScreen('mode')">Latihan Lagi</button>
+    <button class="btn btn-ghost btn-block" onclick="goScreen('home')">Kembali ke Beranda</button>
+  </section>
+
+  <!-- ===================== LEADERBOARD SCREEN ===================== -->
+  <section class="screen" id="screen-leaderboard">
+    <div class="topbar" style="padding-left:0; padding-right:0;">
+      <div class="crumb-title">Papan Peringkat</div>
+    </div>
+    <div class="lb-tabs">
+      <button class="lb-tab active" data-lj="sd" onclick="setLbJenjang('sd')">SD</button>
+      <button class="lb-tab" data-lj="smp" onclick="setLbJenjang('smp')">SMP</button>
+      <button class="lb-tab" data-lj="sma" onclick="setLbJenjang('sma')">SMA</button>
+    </div>
+    <div id="lb-list"></div>
+  </section>
+
+  <!-- ===================== PROFILE / RANK SCREEN ===================== -->
+  <section class="screen" id="screen-profile">
+    <div class="topbar" style="padding-left:0; padding-right:0;">
+      <div class="crumb-title">Profil &amp; Rank</div>
+      <button class="btn-ghost" style="border:none; background:none; color:var(--sub-bindo); font-weight:700; font-size:12.5px;" onclick="doLogout()">Keluar</button>
+    </div>
+    <div class="card" style="text-align:center;">
+      <div class="av" id="profile-av" style="width:56px;height:56px;font-size:20px;border-radius:50%;background:var(--primary-2);color:#fff;display:flex;align-items:center;justify-content:center;margin:0 auto;font-weight:800;">R</div>
+      <div style="font-family:'Baloo 2'; font-weight:800; font-size:17px; margin-top:8px;" id="profile-name">Nama Pengguna</div>
+      <div style="font-size:12px; color:var(--ink-soft);" id="profile-jenjang">SD/MI Sederajat</div>
+      <div class="mono" style="margin-top:8px; font-weight:700; color:var(--primary);" id="profile-points">0 poin</div>
+    </div>
+    <div class="rank-banner" style="margin-top:14px;">
+      <div class="rank-row">
+        <div class="rank-badge-icon" id="rank-icon-profile"></div>
+        <div class="rank-info">
+          <div class="tier" id="rank-tier-profile">Bronze 1</div>
+          <div class="pts" id="rank-pts-profile">0 poin menuju tingkat berikutnya</div>
+        </div>
+      </div>
+      <div class="rank-bar-track"><div class="rank-bar-fill" id="rank-bar-profile" style="width:0%"></div></div>
+    </div>
+    <div class="section-title">Semua Tingkatan Rank</div>
+    <div class="tier-grid" id="tier-grid"></div>
+  </section>
+
+  <!-- ===================== BOTTOM NAV (shown after login) ===================== -->
+  <div class="bottomnav" id="bottomnav" style="display:none;">
+    <button class="navbtn" data-nav="home" onclick="goScreen('home')"><span class="ic">🏠</span>Beranda</button>
+    <button class="navbtn" data-nav="leaderboard" onclick="goScreen('leaderboard')"><span class="ic">🏆</span>Peringkat</button>
+    <button class="navbtn" data-nav="profile" onclick="goScreen('profile')"><span class="ic">🎖️</span>Rank Saya</button>
+  </div>
+
+</div>
+<div class="toast" id="toast"></div>
+
+<script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
